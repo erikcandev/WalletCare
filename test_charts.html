@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teste de Gráficos - WalletCare</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
+    <style>
+        .chart-container {
+            width: 400px;
+            height: 400px;
+            border: 1px solid #ccc;
+            margin: 20px;
+            padding: 20px;
+            overflow: hidden;
+        }
+        .chart-wrapper {
+            position: relative;
+            height: 300px;
+            width: 100%;
+            overflow: hidden;
+        }
+        canvas {
+            position: absolute !important;
+            top: 0 !important;
+            left: 0 !important;
+            max-height: 300px !important;
+            max-width: 100% !important;
+        }
+    </style>
+</head>
+<body>
+    <h1>Teste de Gráficos</h1>
+    
+    <div class="chart-container">
+        <h3>Gráfico de Pizza</h3>
+        <div class="chart-wrapper">
+            <canvas id="testChart1"></canvas>
+        </div>
+    </div>
+    
+    <div class="chart-container">
+        <h3>Gráfico de Linha</h3>
+        <div class="chart-wrapper">
+            <canvas id="testChart2"></canvas>
+        </div>
+    </div>
+    
+    <script>
+        // Teste do gráfico de pizza
+        const ctx1 = document.getElementById('testChart1').getContext('2d');
+        ctx1.canvas.width = 300;
+        ctx1.canvas.height = 300;
+        
+        new Chart(ctx1, {
+            type: 'doughnut',
+            data: {
+                labels: ['Alimentação', 'Jogos', 'Bebidas'],
+                datasets: [{
+                    data: [30, 20, 15],
+                    backgroundColor: ['#4CAF50', '#2196F3', '#FF9800']
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                aspectRatio: 1
+            }
+        });
+        
+        // Teste do gráfico de linha
+        const ctx2 = document.getElementById('testChart2').getContext('2d');
+        ctx2.canvas.width = 400;
+        ctx2.canvas.height = 200;
+        
+        new Chart(ctx2, {
+            type: 'line',
+            data: {
+                labels: ['01/10', '02/10', '03/10', '04/10', '05/10'],
+                datasets: [{
+                    label: 'Gastos',
+                    data: [25, 45, 30, 60, 40],
+                    borderColor: '#4CAF50',
+                    backgroundColor: 'rgba(76, 175, 80, 0.1)',
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                aspectRatio: 2
+            }
+        });
+    </script>
+</body>
+</html>

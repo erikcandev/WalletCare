@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WalletCare - Controle Financeiro</title>
+    
+    <!-- PWA Meta Tags -->
+    <meta name="theme-color" content="#4CAF50">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="WalletCare">
+    
+    <!-- PWA Links -->
+    <link rel="manifest" href="/manifest.json">
+    <link rel="icon" type="image/png" href="/static/icon-192.png">
+    <link rel="apple-touch-icon" href="/static/icon-192.png">
+    
+    <!-- CSS -->
+    <link rel="stylesheet" href="/static/style.css">
+    
+    <!-- Chart.js para gráficos -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
+    <script>
+        // Fallback se Chart.js não carregar
+        window.addEventListener('load', function() {
+            if (typeof Chart === 'undefined') {
+                console.warn('Chart.js não carregou, usando fallback');
+                window.Chart = {
+                    register: function() {},
+                    defaults: { plugins: { legend: { display: true } } }
+                };
+            }
+        });
+    </script>
+    
+    <!-- Font Awesome para ícones -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <!-- Modal de Cadastro Inicial -->
+    <div id="modalCadastro" class="modal">
+        <div class="modal-content">
+            <h2><i class="fas fa-wallet"></i> Bem-vindo ao WalletCare!</h2>
+            <p>Para começar, informe sua renda mensal (opcional):</p>
+            
+            <form id="formCadastro">
+                <div class="input-group">
+                    <label for="rendaMensal">Renda Mensal (R$):</label>
+                    <input type="number" id="rendaMensal" step="0.01" placeholder="Ex: 3000.00">
+                </div>
+                
+                <div class="button-group">
+                    <button type="button" id="btnPular" class="btn btn-secondary">Pular</button>
+                    <button type="submit" class="btn btn-primary">Salvar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Header -->
+    <header class="header">
+        <div class="header-content">
+            <h1><i class="fas fa-wallet"></i> WalletCare</h1>
+            <div class="header-actions">
+                <button id="btnTema" class="btn-icon" title="Alternar tema">
+                    <i class="fas fa-moon"></i>
+                </button>
+                <button id="btnMenu" class="btn-icon" title="Menu">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Navigation -->
+    <nav class="nav-tabs">
+        <button class="nav-tab active" data-tab="dashboard">
+            <i class="fas fa-chart-pie"></i>
+            <span>Dashboard</span>
+        </button>
+        <button class="nav-tab" data-tab="chat">
+            <i class="fas fa-comments"></i>
+            <span>Chat</span>
+        </button>
+        <button class="nav-tab" data-tab="relatorios">
+            <i class="fas fa-file-alt"></i>
+            <span>Relatórios</span>
+        </button>
+        <button class="nav-tab" data-tab="investimentos">
+            <i class="fas fa-chart-line"></i>
+            <span>Investimentos</span>
+        </button>
+        <button class="nav-tab" data-tab="configuracoes">
+            <i class="fas fa-cog"></i>
+            <span>Configurações</span>
+        </button>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        
+        <!-- Dashboard Tab -->
+        <div id="dashboard" class="tab-content active">
+            <div class="dashboard-header">
+                <h2>Resumo Financeiro - <span id="mesAtual"></span></h2>
+                <div class="quick-actions">
+                    <button id="btnAdicionarGasto" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> Adicionar Gasto
+                    </button>
+                </div>
+            </div>
+
+            <!-- Cards de Resumo -->
+            <div class="cards-grid">
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Total Gasto</h3>
+                        <i class="fas fa-money-bill-wave"></i>
+                    </div>
+                    <div class="card-value" id="totalGasto">R$ 0,00</div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Economia Potencial</h3>
+                        <i class="fas fa-piggy-bank"></i>
+                    </div>
+                    <div class="card-value" id="economiaPotencial">R$ 0,00</div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Renda Mensal</h3>
+                        <i class="fas fa-coins"></i>
+                    </div>
+                    <div class="card-value" id="rendaMensalCard">R$ 0,00</div>
+                </div>
+            </div>
+
+            <!-- Gráficos -->
+            <div class="charts-grid">
+                <div class="chart-container">
+                    <h3>Gastos por Categoria</h3>
+                    <div class="chart-wrapper">
+                        <canvas id="graficoCategoria"></canvas>
+                    </div>
+                </div>
+                
+                <div class="chart-container">
+                    <h3>Evolução Diária</h3>
+                    <div class="chart-wrapper">
+                        <canvas id="graficoEvolucao"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Lista de Gastos Recentes -->
+            <div class="recent-expenses">
+                <h3>Gastos Recentes</h3>
+                <div id="listaGastosRecentes" class="expenses-list">
+                    <!-- Gastos serão carregados aqui -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Chat Tab -->
+        <div id="chat" class="tab-content">
+            <div class="chat-container">
+                <div class="chat-header">
+                    <h2><i class="fas fa-robot"></i> Assistente Financeiro</h2>
+                    <p>Digite ou grave uma mensagem sobre seus gastos</p>
+                </div>
+                
+                <div id="chatMessages" class="chat-messages">
+                    <div class="message bot-message">
+                        <div class="message-content">
+                            <p>Olá! 👋 Sou seu assistente financeiro. Você pode me contar sobre seus gastos assim:</p>
+                            <ul>
+                                <li>"Acabei de comprar um lanche, R$ 25"</li>
+                                <li>"Gastei 50 reais no cinema"</li>
+                                <li>"Comprei um jogo por R$ 80"</li>
+                            </ul>
+                            <p>Vou registrar automaticamente e te dar dicas! 💡</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="chat-input">
+                    <div class="input-container">
+                        <input type="text" id="chatInput" placeholder="Digite sua mensagem...">
+                        <button id="btnEnviarChat" class="btn-send">
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
+                        <button id="btnGravarAudio" class="btn-audio">
+                            <i class="fas fa-microphone"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Relatórios Tab -->
+        <div id="relatorios" class="tab-content">
+            <div class="reports-header">
+                <h2>Relatórios Financeiros</h2>
+                <div class="report-actions">
+                    <button id="btnGerarPDF" class="btn btn-primary">
+                        <i class="fas fa-file-pdf"></i> Gerar PDF
+                    </button>
+                </div>
+            </div>
+
+            <!-- Filtros -->
+            <div class="filters">
+                <div class="filter-group">
+                    <label for="filtroMes">Mês:</label>
+                    <select id="filtroMes">
+                        <option value="atual">Mês Atual</option>
+                        <option value="anterior">Mês Anterior</option>
+                        <option value="todos">Todos</option>
+                    </select>
+                </div>
+                
+                <div class="filter-group">
+                    <label for="filtroCategoria">Categoria:</label>
+                    <select id="filtroCategoria">
+                        <option value="todas">Todas</option>
+                        <option value="alimentacao">Alimentação</option>
+                        <option value="jogos">Jogos</option>
+                        <option value="bebidas">Bebidas</option>
+                        <option value="entretenimento">Entretenimento</option>
+                        <option value="outros">Outros</option>
+                        <option value="nao_essencial">Não Essencial</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Tabela de Gastos -->
+            <div class="table-container">
+                <table id="tabelaGastos" class="expenses-table">
+                    <thead>
+                        <tr>
+                            <th>Data</th>
+                            <th>Descrição</th>
+                            <th>Categoria</th>
+                            <th>Valor</th>
+                            <th>Tipo</th>
+                        </tr>
+                    </thead>
+                    <tbody id="corpoTabelaGastos">
+                        <!-- Dados serão carregados aqui -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Estatísticas -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <h4>Total de Gastos</h4>
+                    <div class="stat-value" id="statTotalGastos">R$ 0,00</div>
+                </div>
+                
+                <div class="stat-card">
+                    <h4>Gastos Impulsivos</h4>
+                    <div class="stat-value" id="statGastosImpulsivos">R$ 0,00</div>
+                </div>
+                
+                <div class="stat-card">
+                    <h4>Média por Gasto</h4>
+                    <div class="stat-value" id="statMediaGasto">R$ 0,00</div>
+                </div>
+                
+                <div class="stat-card">
+                    <h4>Categoria Principal</h4>
+                    <div class="stat-value" id="statCategoriaPrincipal">-</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Investimentos Tab -->
+        <div id="investimentos" class="tab-content">
+            <div class="investments-header">
+                <h2>Sugestões de Investimento</h2>
+                <p>Baseado na sua situação financeira atual</p>
+            </div>
+
+            <!-- Cards de Investimento -->
+            <div class="investment-cards">
+                <div class="investment-card">
+                    <div class="card-header">
+                        <h3>Capacidade de Investimento</h3>
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <div class="investment-value" id="capacidadeInvestimento">R$ 0,00</div>
+                    <p class="investment-desc">Valor seguro para investir este mês</p>
+                </div>
+                
+                <div class="investment-card">
+                    <div class="card-header">
+                        <h3>Sobra Mensal</h3>
+                        <i class="fas fa-wallet"></i>
+                    </div>
+                    <div class="investment-value" id="sobraMensal">R$ 0,00</div>
+                    <p class="investment-desc">Renda - Gastos do mês</p>
+                </div>
+            </div>
+
+            <!-- Dicas de Economia -->
+            <div class="tips-section">
+                <h3>💡 Dicas de Economia</h3>
+                <div id="dicasEconomia" class="tips-list">
+                    <!-- Dicas serão carregadas aqui -->
+                </div>
+            </div>
+
+            <!-- Simulador de Investimento -->
+            <div class="investment-simulator">
+                <h3>Simulador de Investimento</h3>
+                <div class="simulator-form">
+                    <div class="input-group">
+                        <label for="valorInvestir">Valor a Investir (R$):</label>
+                        <input type="number" id="valorInvestir" step="0.01" placeholder="0.00">
+                    </div>
+                    
+                    <div class="input-group">
+                        <label for="periodoInvestimento">Período (meses):</label>
+                        <input type="number" id="periodoInvestimento" min="1" value="12">
+                    </div>
+                    
+                    <div class="input-group">
+                        <label for="taxaJuros">Taxa de Juros (% ao mês):</label>
+                        <input type="number" id="taxaJuros" step="0.01" value="0.5">
+                    </div>
+                    
+                    <button id="btnSimular" class="btn btn-primary">Simular</button>
+                </div>
+                
+                <div id="resultadoSimulacao" class="simulation-result" style="display: none;">
+                    <h4>Resultado da Simulação</h4>
+                    <p>Valor Final: <span id="valorFinal">R$ 0,00</span></p>
+                    <p>Rendimento: <span id="rendimento">R$ 0,00</span></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Configurações Tab -->
+        <div id="configuracoes" class="tab-content">
+            <div class="settings-header">
+                <h2>Configurações</h2>
+                <p>Gerencie suas preferências e dados do aplicativo</p>
+            </div>
+
+            <!-- Configurações Financeiras -->
+            <div class="settings-section">
+                <h3><i class="fas fa-money-bill-wave"></i> Configurações Financeiras</h3>
+                
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <h4>Renda Mensal</h4>
+                        <p>Defina ou altere sua renda mensal para cálculos mais precisos</p>
+                    </div>
+                    <div class="setting-control">
+                        <div class="input-group">
+                            <input type="number" id="novaRendaMensal" step="0.01" placeholder="Ex: 3000.00">
+                            <button id="btnSalvarRenda" class="btn btn-primary">
+                                <i class="fas fa-save"></i> Salvar
+                            </button>
+                        </div>
+                        <div class="current-value">
+                            Atual: <span id="rendaAtual">R$ 0,00</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Gerenciamento de Dados -->
+            <div class="settings-section">
+                <h3><i class="fas fa-database"></i> Gerenciamento de Dados</h3>
+                
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <h4>Resetar Gastos Mensais</h4>
+                        <p>Remove todos os gastos registrados. <strong>Esta ação não pode ser desfeita!</strong></p>
+                    </div>
+                    <div class="setting-control">
+                        <button id="btnResetarGastos" class="btn btn-danger">
+                            <i class="fas fa-trash-alt"></i> Resetar Gastos
+                        </button>
+                    </div>
+                </div>
+
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <h4>Estatísticas dos Dados</h4>
+                        <p>Informações sobre seus dados armazenados</p>
+                    </div>
+                    <div class="setting-control">
+                        <div class="stats-grid">
+                            <div class="stat-item">
+                                <span class="stat-label">Total de Gastos:</span>
+                                <span class="stat-value" id="totalGastosRegistrados">0</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">Primeiro Registro:</span>
+                                <span class="stat-value" id="primeiroRegistro">-</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">Último Registro:</span>
+                                <span class="stat-value" id="ultimoRegistro">-</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Configurações do Aplicativo -->
+            <div class="settings-section">
+                <h3><i class="fas fa-palette"></i> Aparência</h3>
+                
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <h4>Tema do Aplicativo</h4>
+                        <p>Escolha entre tema claro ou escuro</p>
+                    </div>
+                    <div class="setting-control">
+                        <div class="theme-selector">
+                            <button id="btnTemaClaro" class="theme-btn active">
+                                <i class="fas fa-sun"></i> Claro
+                            </button>
+                            <button id="btnTemaEscuro" class="theme-btn">
+                                <i class="fas fa-moon"></i> Escuro
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Modal Adicionar Gasto -->
+    <div id="modalGasto" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Adicionar Gasto</h3>
+                <button class="modal-close">&times;</button>
+            </div>
+            
+            <form id="formGasto">
+                <div class="input-group">
+                    <label for="valorGasto">Valor (R$):</label>
+                    <input type="number" id="valorGasto" step="0.01" required>
+                </div>
+                
+                <div class="input-group">
+                    <label for="categoriaGasto">Categoria:</label>
+                    <select id="categoriaGasto" required>
+                        <option value="">Selecione...</option>
+                        <option value="alimentacao">Alimentação</option>
+                        <option value="jogos">Jogos</option>
+                        <option value="bebidas">Bebidas</option>
+                        <option value="entretenimento">Entretenimento</option>
+                        <option value="outros">Outros</option>
+                        <option value="nao_essencial">Não Essencial</option>
+                    </select>
+                </div>
+                
+                <div class="input-group">
+                    <label for="descricaoGasto">Descrição:</label>
+                    <input type="text" id="descricaoGasto" placeholder="Ex: Lanche no trabalho" required>
+                </div>
+                
+                <div class="checkbox-group">
+                    <label>
+                        <input type="checkbox" id="gastoImpulsivo">
+                        Este foi um gasto impulsivo
+                    </label>
+                </div>
+                
+                <div class="button-group">
+                    <button type="button" class="btn btn-secondary modal-close">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Salvar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Confirmação Reset -->
+    <div id="modalConfirmReset" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-exclamation-triangle" style="color: #F44336;"></i> Confirmar Reset</h3>
+                <button class="modal-close">&times;</button>
+            </div>
+            
+            <div class="modal-body">
+                <p><strong>⚠️ ATENÇÃO: Esta ação é irreversível!</strong></p>
+                <p>Você está prestes a <strong>deletar todos os gastos registrados</strong>. Isso incluí:</p>
+                <ul>
+                    <li>Todos os registros de gastos</li>
+                    <li>Histórico de categorias</li>
+                    <li>Dados para gráficos e relatórios</li>
+                </ul>
+                <p>Tem certeza que deseja continuar?</p>
+                
+                <div class="confirmation-input">
+                    <label for="confirmText">Digite <strong>"RESETAR"</strong> para confirmar:</label>
+                    <input type="text" id="confirmText" placeholder="Digite RESETAR">
+                </div>
+            </div>
+            
+            <div class="button-group">
+                <button type="button" class="btn btn-secondary modal-close">Cancelar</button>
+                <button id="btnConfirmarReset" class="btn btn-danger" disabled>
+                    <i class="fas fa-trash-alt"></i> Confirmar Reset
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Spinner -->
+    <div id="loading" class="loading" style="display: none;">
+        <div class="spinner"></div>
+        <p>Carregando...</p>
+    </div>
+
+    <!-- Toast Notifications -->
+    <div id="toast" class="toast"></div>
+
+    <!-- JavaScript -->
+    <script src="/static/main.js"></script>
+    
+    <!-- Service Worker Registration -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function() {
+                navigator.serviceWorker.register('/static/sw.js')
+                    .then(function(registration) {
+                        console.log('ServiceWorker registration successful');
+                    })
+                    .catch(function(err) {
+                        console.log('ServiceWorker registration failed: ', err);
+                    });
+            });
+        }
+    </script>
+</body>
+</html>
