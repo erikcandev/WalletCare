@@ -81,28 +81,6 @@ http://localhost:5000
 3. Selecione "Adicionar à tela inicial"
 4. O app será instalado como aplicativo nativo
 
-## Estrutura do Projeto
-
-```
-WalletCare/
-├── app.py                 # Servidor Flask principal
-├── requirements.txt       # Dependências Python
-├── README.md             # Documentação
-├── manifest.json         # Configuração PWA
-├── data/                 # Dados offline (criado automaticamente)
-│   ├── financas.json     # Gastos e categorias
-│   └── config.json       # Configurações do usuário
-├── templates/
-│   └── index.html        # Interface principal
-├── static/
-│   ├── style.css         # Estilos CSS
-│   ├── main.js           # JavaScript principal
-│   ├── sw.js             # Service Worker
-│   └── icon-*.png        # Ícones PWA
-└── utils/
-    ├── analisador.py     # Processamento de mensagens
-    └── relatorio_pdf.py  # Geração de relatórios
-```
 
 ## Uso do Aplicativo
 
@@ -191,24 +169,10 @@ O app identifica automaticamente:
 - **Reconhecimento de Voz** - Disponível em navegadores compatíveis
 - **Instalação PWA** - Suportado na maioria dos navegadores modernos
 
-## Segurança e Privacidade
-
 ### Dados Locais
 - Todos os dados ficam no dispositivo
 - Nenhuma informação enviada para servidores externos
 - Controle total sobre seus dados financeiros
-
-### Backup Manual
-- Copie a pasta `data/` para backup
-- Restaure copiando os arquivos de volta
-
-## Desenvolvimento
-
-### Contribuindo
-1. Fork o projeto
-2. Crie uma branch para sua feature
-3. Commit suas mudanças
-4. Abra um Pull Request
 
 ### Estrutura de Desenvolvimento
 - **Backend** - Flask com APIs RESTful
@@ -231,17 +195,3 @@ O app identifica automaticamente:
 - [ ] Docker containerization
 - [ ] API documentation
 
-## Suporte
-
-Para dúvidas, sugestões ou problemas:
-1. Verifique a documentação
-2. Consulte os logs do navegador (F12)
-3. Abra uma issue no repositório
-
-## Licença
-
-Este projeto está sob licença MIT. Veja o arquivo LICENSE para detalhes.
-
----
-
-**WalletCare** - Seu assistente financeiro pessoal 💰📱
